@@ -8349,11 +8349,10 @@ function getFullAccessUrl() {
         : "";
 }
 function getFullLogServerUrl() {
-    let e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : "";
-    return e ? (/^https?:\/\/.+/.test(e) || (e = "https://".concat(e)), "".concat(e, "/video/v1/webrtc_log/")) : "";
+    return "";
 }
-const domesticLogServerUrl = "https://web-log-report.rtc.volcvideo.com/video/v1/webrtc_log/",
-    overseasLogServerUrl = "https://web-log-report.volcvideos.com/video/v1/webrtc_log/",
+const domesticLogServerUrl = "",
+    overseasLogServerUrl = "",
     configDomains = "common.rtc.volcvideo.com,rtcg.volcvideos.com".split(","),
     Config2 = {
         VERSION: "4.68.2",
