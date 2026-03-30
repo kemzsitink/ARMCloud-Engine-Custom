@@ -8320,7 +8320,7 @@ const createOfferSdp = async (e) => {
                 : !(!isAndroid && !isOpenHarmony) && isChrome && chromeVersion >= 86,
     isStatsCallbackSupport = isChrome && chromeVersion <= 114,
     isTransportCCSupport = !isFirefox || firefoxVersion >= 96,
-    isRRTRSupported = !(isSafari && safariVersion <= 14),
+    isRRTRSupported = false,
     unsupportedSimultaneousCapture = (isAndroid && isChrome) || (isIOS && iOSVersion[0] >= 16),
     isSimulcastSupported = () => !isFirefox && !isOpera && 14 !== (null == iOSVersion ? void 0 : iOSVersion[0]),
     isComputePressureSupported = void 0 !== _globalThis && "PressureObserver" in _globalThis,
@@ -17306,11 +17306,10 @@ const setAudioCodecPreferences = (e, t) => {
                                 d
                             );
                         case "rtx":
-                            return !!s[r[o]] && ((s[o] = o), !0);
                         case "red":
                         case "ulpfec":
                         case "flexfec-03":
-                            return (s[o] = o), !0;
+                            return !1; /* gaming: strip retransmit/fec */
                         default:
                             return (
                                 (d = !1),
@@ -17323,11 +17322,7 @@ const setAudioCodecPreferences = (e, t) => {
                 })),
             Array.isArray(e.fmtp) && (e.fmtp = e.fmtp.filter((e) => s[e.payload])),
             Array.isArray(e.rtcpFb) ? (e.rtcpFb = e.rtcpFb.filter((e) => s[e.payload])) : (e.rtcpFb = []),
-            o.rrtr &&
-                a.forEach((t) => {
-                    var i;
-                    null === (i = e.rtcpFb) || void 0 === i || i.push({ payload: t, type: "rrtr" });
-                }),
+            /* gaming: rrtr disabled */
             deleteProperty(e, i),
             Array.isArray(e.ext) &&
                 (e.ext = e.ext.filter((e) => {
@@ -17529,7 +17524,7 @@ class PeerConnection extends EnhancedEventEmitter {
             this._print("connect", "invoke. %o", e),
             (this._iceNode = e),
             (this._closeManually = !1);
-        const t = this._pc.createDataChannel("signaling", { negotiated: !0, id: 100 });
+        const t = this._pc.createDataChannel("signaling", { negotiated: !0, id: 100, ordered: !1 });
         (t.binaryType = "arraybuffer"), (this._dc = t);
         const { offerIce: i, answerIce: o } = this._genIceInfo(e);
         (this._offerIce = i),
@@ -17580,11 +17575,11 @@ class PeerConnection extends EnhancedEventEmitter {
                           (t.rtcpFb =
                               null === (o = t.rtcpFb) || void 0 === o
                                   ? void 0
-                                  : o.filter((e) => "goog-remb" !== e.type)))
+                                  : o.filter((e) => "goog-remb" !== e.type && "nack" !== e.type && "pli" !== e.type && "ccm" !== e.type)))
                         : ((t.rtcpFb =
                               null === (r = t.rtcpFb) || void 0 === r
                                   ? void 0
-                                  : r.filter((e) => "transport-cc" !== e.type)),
+                                  : r.filter((e) => "transport-cc" !== e.type && "nack" !== e.type && "pli" !== e.type && "ccm" !== e.type)),
                           (t.ext =
                               null === (s = t.ext) || void 0 === s
                                   ? void 0
@@ -17728,7 +17723,7 @@ class PeerConnection extends EnhancedEventEmitter {
     }
     async startIceConnectStandard(e) {
         this._print("connect", "standard invoke. %o", e), (this._iceNode = e);
-        const t = this._pc.createDataChannel("signaling", { negotiated: !0, id: 100 });
+        const t = this._pc.createDataChannel("signaling", { negotiated: !0, id: 100, ordered: !1 });
         (t.binaryType = "arraybuffer"), (this._dc = t);
         const { offerIce: i, answerIce: o } = this._genIceInfo(e);
         (this._offerIce = i),
@@ -17784,12 +17779,12 @@ class PeerConnection extends EnhancedEventEmitter {
                                 (e.rtcpFb =
                                     null === (i = e.rtcpFb) || void 0 === i
                                         ? void 0
-                                        : i.filter((e) => "goog-remb" !== e.type));
+                                        : i.filter((e) => "goog-remb" !== e.type && "nack" !== e.type && "pli" !== e.type && "ccm" !== e.type));
                         else
                             (e.rtcpFb =
                                 null === (o = e.rtcpFb) || void 0 === o
                                     ? void 0
-                                    : o.filter((e) => "transport-cc" !== e.type)),
+                                    : o.filter((e) => "transport-cc" !== e.type && "nack" !== e.type && "pli" !== e.type && "ccm" !== e.type)),
                                 (e.ext =
                                     null === (r = e.ext) || void 0 === r
                                         ? void 0
@@ -20028,7 +20023,7 @@ class BasicHandler extends eventemitter3Exports.EventEmitter {
             _defineProperty(this, "_nextSsrc", generateRandomSsrc()),
             _defineProperty(this, "_aSendonlyAnswerTpl", void 0),
             _defineProperty(this, "_vSendonlyAnswerTpl", void 0),
-            _defineProperty(this, "_enableSubFlexfec", !1),
+            _defineProperty(this, "_enableSubFlexfec", !1) /* gaming: flexfec disabled */,
             _defineProperty(this, "audioTrack4ff", void 0),
             _defineProperty(this, "setLocalDescription", void 0),
             _defineProperty(this, "setRemoteDescription", void 0),
@@ -20117,7 +20112,7 @@ class BasicHandler extends eventemitter3Exports.EventEmitter {
                             null !== (t = e.codec) &&
                                 void 0 !== t &&
                                 t.includes("flexfec") &&
-                                (this._enableSubFlexfec = !0);
+                                (this._enableSubFlexfec = !1 /* gaming: force off */);
                         }));
         }),
             isRRTRSupported && pushRRTR(t);
@@ -20841,11 +20836,11 @@ class FirefoxHandler extends BasicHandler {
                           (e.rtcpFb =
                               null === (i = e.rtcpFb) || void 0 === i
                                   ? void 0
-                                  : i.filter((e) => "goog-remb" !== e.type)))
+                                  : i.filter((e) => "goog-remb" !== e.type && "nack" !== e.type && "pli" !== e.type && "ccm" !== e.type)))
                         : ((e.rtcpFb =
                               null === (o = e.rtcpFb) || void 0 === o
                                   ? void 0
-                                  : o.filter((e) => "transport-cc" !== e.type)),
+                                  : o.filter((e) => "transport-cc" !== e.type && "nack" !== e.type && "pli" !== e.type && "ccm" !== e.type)),
                           (e.ext =
                               null === (r = e.ext) || void 0 === r
                                   ? void 0
@@ -20983,12 +20978,12 @@ class FirefoxHandler extends BasicHandler {
                             (e.rtcpFb =
                                 null === (i = e.rtcpFb) || void 0 === i
                                     ? void 0
-                                    : i.filter((e) => "goog-remb" !== e.type));
+                                    : i.filter((e) => "goog-remb" !== e.type && "nack" !== e.type && "pli" !== e.type && "ccm" !== e.type));
                     else
                         (e.rtcpFb =
                             null === (o = e.rtcpFb) || void 0 === o
                                 ? void 0
-                                : o.filter((e) => "transport-cc" !== e.type)),
+                                : o.filter((e) => "transport-cc" !== e.type && "nack" !== e.type && "pli" !== e.type && "ccm" !== e.type)),
                             (e.ext =
                                 null === (r = e.ext) || void 0 === r
                                     ? void 0
@@ -21292,11 +21287,11 @@ class FallbackHandler extends BasicHandler {
                           (e.rtcpFb =
                               null === (i = e.rtcpFb) || void 0 === i
                                   ? void 0
-                                  : i.filter((e) => "goog-remb" !== e.type)))
+                                  : i.filter((e) => "goog-remb" !== e.type && "nack" !== e.type && "pli" !== e.type && "ccm" !== e.type)))
                         : ((e.rtcpFb =
                               null === (o = e.rtcpFb) || void 0 === o
                                   ? void 0
-                                  : o.filter((e) => "transport-cc" !== e.type)),
+                                  : o.filter((e) => "transport-cc" !== e.type && "nack" !== e.type && "pli" !== e.type && "ccm" !== e.type)),
                           (e.ext =
                               null === (r = e.ext) || void 0 === r
                                   ? void 0
@@ -21865,7 +21860,7 @@ const SDPTools = {
         var t;
         if (!e) return;
         const i = [];
-        (e.rtp = e.rtp.filter((e) => ("rtx" === e.codec && i.push(e.payload), "rtx" !== e.codec))),
+        (e.rtp = e.rtp.filter((e) => ("rtx"===e.codec||"red"===e.codec||"ulpfec"===e.codec||"flexfec-03"===e.codec) ? (i.push(e.payload), !1) : !0)),
             (e.fmtp = e.fmtp.filter((e) => i.includes(e.payload))),
             (e.payloads =
                 null === (t = e.payloads) || void 0 === t
@@ -21888,11 +21883,11 @@ const SDPTools = {
                         ? void 0
                         : i.filter((e) => -1 === e.uri.indexOf("abs-send-time"))),
                     (e.rtcpFb =
-                        null === (o = e.rtcpFb) || void 0 === o ? void 0 : o.filter((e) => "goog-remb" !== e.type));
+                        null === (o = e.rtcpFb) || void 0 === o ? void 0 : o.filter((e) => "goog-remb" !== e.type && "nack" !== e.type && "pli" !== e.type && "ccm" !== e.type));
             else if ("remb" === t) {
                 var r, s;
                 (e.rtcpFb =
-                    null === (r = e.rtcpFb) || void 0 === r ? void 0 : r.filter((e) => "transport-cc" !== e.type)),
+                    null === (r = e.rtcpFb) || void 0 === r ? void 0 : r.filter((e) => "transport-cc" !== e.type && "nack" !== e.type && "pli" !== e.type && "ccm" !== e.type)),
                     (e.ext =
                         null === (s = e.ext) || void 0 === s
                             ? void 0
