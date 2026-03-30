@@ -1,0 +1,60 @@
+{
+  "name": "armcloud-rtc",
+  "version": "1.5.7",
+  "type": "module",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "rtc",
+    "armcloud-rtc",
+    "webrtc"
+  ],
+  "scripts": {
+    "build": "rimraf dist && rollup --config rollup.config.ts --configPlugin typescript",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix"
+  },
+  "author": "ask",
+  "license": "ISC",
+  "description": "armcloud-rtc sdk",
+  "dependencies": {
+    "@volcengine/rtc": "^4.61.2",
+    "axios": "^1.7.3",
+    "clipboard-copy": "^4.0.1",
+    "crypto-js": "^4.2.0",
+    "webrtc-adapter": "^9.0.1"
+  },
+  "peerDependencies": {
+    "@volcengine/rtc": "^4.61.2",
+    "axios": "^1.7.3",
+    "clipboard-copy": "^4.0.1",
+    "crypto-js": "^4.2.0",
+    "webrtc-adapter": "^9.0.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/preset-env": "^7.25.3",
+    "@eslint/js": "^10.0.1",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^26.0.1",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-strip": "^3.0.4",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@types/axios": "^0.14.4",
+    "@types/crypto-js": "^4.2.2",
+    "@typescript-eslint/eslint-plugin": "^8.58.0",
+    "@typescript-eslint/parser": "^8.58.0",
+    "eslint": "^10.1.0",
+    "globals": "^17.4.0",
+    "rimraf": "^6.0.1",
+    "rollup": "^4.46.4",
+    "rollup-plugin-dts": "^6.2.3",
+    "tslib": "^2.6.3"
+  }
+}
