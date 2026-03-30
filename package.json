@@ -22,14 +22,12 @@
   "license": "ISC",
   "description": "armcloud-rtc sdk",
   "dependencies": {
-    "@volcengine/rtc": "^4.61.2",
     "axios": "^1.7.3",
     "clipboard-copy": "^4.0.1",
     "crypto-js": "^4.2.0",
     "webrtc-adapter": "^9.0.1"
   },
   "peerDependencies": {
-    "@volcengine/rtc": "^4.61.2",
     "axios": "^1.7.3",
     "clipboard-copy": "^4.0.1",
     "crypto-js": "^4.2.0",
