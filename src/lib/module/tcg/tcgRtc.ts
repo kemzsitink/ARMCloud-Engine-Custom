@@ -37,99 +37,21 @@ import {
     type BitrateId,
     type FramerateId,
 } from "./config/streamProfiles";
-
-interface PromiseResolver<T = unknown> {
-    resolve: ((result: T) => void) | null;
-}
-
-interface PromiseMap {
-    streamStatus: PromiseResolver;
-    injectStatus: PromiseResolver;
-}
-
-interface RemoteInputState {
-    isOpen: boolean;
-    imeOptions: string;
-}
-
-interface ConnectFailResponse {
-    code: number;
-    msg?: string;
-}
-
-interface ConfigurationChangeResponse {
-    screen_config: {
-        orientation: "landscape" | "portrait";
-        deg: 0 | 90 | 180 | 270;
-        width: number;
-        height: number;
-    };
-}
-
-interface VideoStreamConfigResponse {
-    width: number;
-    height: number;
-}
-
-interface AndroidInstanceEventResponse {
-    type: string;
-    data?: { event_type?: string };
-}
-
-interface MediaStats {
-    audioStats: {
-        packet_lost: number;
-        packet_received: number;
-        bit_rate: number;
-        rtt: number;
-        jitter_buffer: number;
-        channels: number;
-        sample_rate: number;
-        concealed_samples: number;
-        concealment_events: number;
-        codec: string;
-    };
-    videoStats: {
-        width: number;
-        height: number;
-        packet_lost: number;
-        packet_received: number;
-        bit_rate: number;
-        fps: number;
-        edge_rtt: number;
-        rtt: number;
-        codec: string;
-        raw_rtt: number;
-    };
-}
-
-interface SdkEventResponse {
-    type: string;
-    data?: {
-        code?: number;
-        mediaType?: "video" | "audio";
-        audioStats?: MediaStats["audioStats"];
-        videoStats?: MediaStats["videoStats"];
-    };
-}
-
-interface InjectVideoOptions {
-    fileUrl?: string;
-    isLoop?: boolean;
-    fileName?: string;
-}
-
-interface InjectResult {
-    type: string;
-    status: string;
-    result: unknown;
-}
-
-interface StreamStatusResult {
-    path?: string;
-    status: string;
-    type: string;
-}
+import type {
+    PromiseResolver,
+    PromiseMap,
+    RemoteInputState,
+} from "../../types/internal";
+import type {
+    ConnectFailResponse,
+    ConfigurationChangeResponse,
+    VideoStreamConfigResponse,
+    AndroidInstanceEventResponse,
+    SdkEventResponse,
+    InjectVideoOptions,
+    InjectResult,
+    StreamStatusResult,
+} from "../../types/rtc-responses";
 
 class tcgRtc {
     // 引擎实例

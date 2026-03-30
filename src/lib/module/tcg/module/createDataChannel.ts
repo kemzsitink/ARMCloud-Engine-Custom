@@ -1,5 +1,6 @@
 import { CloudGamingWebSDK } from "../core/index";
 import { TouchType } from "../../../types/webrtcType";
+import type { Listener } from "../../../types/internal";
 
 // 支持的事件类型
 export const enum EventType {
@@ -7,8 +8,6 @@ export const enum EventType {
   INITIALIZED = "initialized",
   CALLBACK = "callBack",
 }
-
-type Listener<T = any> = (payload: T) => void;
 
 export default class CreateDataChannel {
   // 发送消息

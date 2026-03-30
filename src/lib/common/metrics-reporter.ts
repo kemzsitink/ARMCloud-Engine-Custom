@@ -1,14 +1,8 @@
 
-// 上报事件枚举
+import type { ReporterOptions } from "../types/internal";
+
 export const enum ReportEventType {
     FIRST_FRAME = "FirstFrame",
-}
-interface ReporterOptions {
-    endpoint: string;
-    commonParams?: Record<string, any>;
-    useBeacon?: boolean;
-    enableLog?: boolean;
-    onceOnlyKeys?: string[];
 }
 
 export class MetricsReporter {
