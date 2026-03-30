@@ -1,44 +1,40 @@
+export interface AccelerationVector {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export type ShakeCallback = (vector: AccelerationVector) => void;
+
+/** Simulates device shake by emitting random acceleration vectors at 100 Hz. */
 export default class ShakeSimulator {
-  private isRunning: boolean
-  private intervalId?: any
+  private intervalId: ReturnType<typeof setInterval> | undefined;
 
-  constructor() {
-    this.isRunning = false
-  }
-
-  public startShakeSimulation(duration: number = 1800, callback: Function): void {
-    this.isRunning = true
-    const startTime = Date.now()
+  startShakeSimulation(duration = 1800, callback: ShakeCallback): void {
+    const startTime = Date.now();
 
     this.intervalId = setInterval(() => {
-      if (!this.isRunning) return
-
-      // 生成随机加速度值
-      const x = this.randomAcceleration()
-      const y = this.randomAcceleration()
-      const z = this.randomAcceleration()
-
       callback({
-        x,
-        y,
-        z
-      })
-      // 检查时间是否到达指定持续时间
-      if (Date.now() - startTime > duration) {
-        this.stopShakeSimulation()
+        x: this.randomAcceleration(),
+        y: this.randomAcceleration(),
+        z: this.randomAcceleration(),
+      });
+
+      if (Date.now() - startTime >= duration) {
+        this.stopShakeSimulation();
       }
-    }, 10)
-  }
-  private randomAcceleration(): number {
-    // 随机生成一个模拟的加速度值
-    return Math.random() * 15 - 5 // 产生 -10 到 15 之间的随机值
+    }, 10);
   }
 
-  private stopShakeSimulation(): void {
-    if (this.intervalId) {
-      clearInterval(this.intervalId)
-      this.intervalId = undefined
-      this.isRunning = false
+  stopShakeSimulation(): void {
+    if (this.intervalId !== undefined) {
+      clearInterval(this.intervalId);
+      this.intervalId = undefined;
     }
+  }
+
+  /** Returns a random value in the range [-5, 10). */
+  private randomAcceleration(): number {
+    return Math.random() * 15 - 5;
   }
 }

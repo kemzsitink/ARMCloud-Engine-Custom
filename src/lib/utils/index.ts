@@ -1,76 +1,64 @@
-import copy from 'clipboard-copy'
+import copy from "clipboard-copy";
 
-export const blobToText = (blob: Blob) => {
-  return new Promise((resolve, reject) => {
+/** Read a Blob as UTF-8 text. */
+export const blobToText = (blob: Blob): Promise<string> =>
+  new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => {
-      resolve(reader.result); // 读取结果为文本
-    };
-    reader.onerror = () => {
-      reject(new Error("Failed to read blob as text"));
-    };
-    reader.readAsText(blob); // 读取 Blob 为文本
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("Failed to read blob as text"));
+    reader.readAsText(blob);
   });
+
+/** Decode an ArrayBuffer to a UTF-8 string. */
+export const arrayBufferToText = (buffer: ArrayBuffer): string =>
+  new TextDecoder("utf-8").decode(buffer);
+
+export type BinaryKind = "ArrayBuffer" | "Blob" | "String";
+
+/** Return the runtime kind of a binary input. */
+export const checkType = (input: ArrayBuffer | Blob | string): BinaryKind => {
+  if (input instanceof ArrayBuffer) return "ArrayBuffer";
+  if (input instanceof Blob) return "Blob";
+  return "String";
 };
 
-export const arrayBufferToText = (buffer: ArrayBuffer) => {
-  if (typeof TextDecoder !== "undefined") {
-    const decoder = new TextDecoder("utf-8");
-    return decoder.decode(buffer);
-  } else {
-    return String.fromCharCode.apply(null, new Uint8Array(buffer) as any);
-  }
-};
+/** Returns `true` when running on a mobile user-agent. */
+export const isMobile = (): boolean =>
+  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile\//i.test(
+    navigator.userAgent
+  );
 
-export const checkType = (input: Blob | ArrayBuffer | String) => {
-  if (input instanceof ArrayBuffer) {
-    return "ArrayBuffer";
-  } else if (input instanceof Blob) {
-    return "Blob";
-  } else {
-    return "String";
-  }
-};
-/** 判断是否是手机 */
+/** Returns `true` when the device supports touch events. */
+export const isTouchDevice = (): boolean =>
+  "ontouchstart" in document.documentElement;
 
-export const isMobile = () => {
-  const flag =
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile\//i.test(
-      // eslint-disable-next-line comma-dangle
-      navigator.userAgent
-    );
-  return flag;
-};
+/** Resolves on the next animation frame. */
+export const nextFrame = (): Promise<void> =>
+  new Promise((resolve) => requestAnimationFrame(() => resolve()));
 
-export const isTouchDevice = () =>
-  !!("ontouchstart" in document.documentElement);
-
+/**
+ * Wait for a style mutation to be applied to an element.
+ * Forces a reflow then waits one frame.
+ */
 export const waitStyleApplied = async (el: HTMLElement): Promise<void> => {
   void el.offsetWidth;
   await nextFrame();
 };
 
-export const nextFrame = (): Promise<void> => {
-  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
-};
-
-export function debounce<T extends (...args: any[]) => void>(
+/**
+ * Returns a debounced version of `fn`.
+ * Resets the timer on every call within the `delay` window.
+ */
+export const debounce = <T extends (...args: Parameters<T>) => void>(
   fn: T,
   delay: number
-) {
-  let timer: ReturnType<typeof setTimeout> | null = null
+): ((...args: Parameters<T>) => void) => {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  return (...args: Parameters<T>): void => {
+    if (timer !== null) clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+};
 
-  return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
-    if (timer) {
-      clearTimeout(timer)
-    }
-
-    timer = setTimeout(() => {
-      fn.apply(this, args)
-    }, delay)
-  }
-}
-
-export const copyText = (text: string) => {
-  return copy(text)
-}
+/** Copy `text` to the system clipboard. */
+export const copyText = (text: string): Promise<void> => copy(text);
