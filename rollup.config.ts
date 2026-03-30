@@ -3,24 +3,29 @@ import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
 import json from '@rollup/plugin-json';
 import strip from '@rollup/plugin-strip';
+import alias from '@rollup/plugin-alias';
 import dts from 'rollup-plugin-dts';
 import { defineConfig } from 'rollup';
+import path from 'path';
 
 const input = 'src/index.ts';
 const sourcemap = true;
 
-// Xóa console.log/debug/info khỏi production build, giữ lại console.warn/error
+// Redirect @volcengine/rtc → vendored local copy so we can patch it
+const aliasPlugin = alias({
+  entries: [
+    { find: '@volcengine/rtc', replacement: path.resolve('src/vendor/volcengine-rtc.esm.js') },
+  ],
+});
+
+// Strip console.log/debug/info from production build
 const stripPlugin = strip({
   functions: ['console.log', 'console.debug', 'console.info'],
   include: '**/*.ts',
 });
-const externalDeps = Object.keys({
-  '@volcengine/rtc': '',
-  'axios': '',
-  'clipboard-copy': '',
-  'crypto-js': '',
-  'webrtc-adapter': '',
-});
+
+// External deps for es/cjs (consumers install these themselves)
+const externalDeps = ['axios', 'clipboard-copy', 'crypto-js', 'webrtc-adapter'];
 
 export default defineConfig([
   {
@@ -39,6 +44,7 @@ export default defineConfig([
       },
     ],
     plugins: [
+      aliasPlugin,
       resolve({ browser: true, preferBuiltins: false }),
       commonjs(),
       json(),
@@ -60,6 +66,7 @@ export default defineConfig([
       sourcemap,
     },
     plugins: [
+      aliasPlugin,
       resolve({ browser: true, preferBuiltins: false }),
       commonjs(),
       json(),

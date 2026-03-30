@@ -20,6 +20,12 @@ import {
   TouchType,
   MediaOperationType,
 } from "../../types/webrtcType";
+import {
+  getFps,
+  getKbps,
+  type FramerateId,
+  type BitrateId,
+} from "../tcg/config/streamProfiles";
 class customRtc {
   // 初始外部H5传入DomId
   private initDomId: string = "";
@@ -220,22 +226,15 @@ class customRtc {
   }
 
   setVideoEncoder(width: number, height: number) {
-    if (!width || !height) {
-      return;
-    }
-    this.cameraResolution = {
-      width,
-      height,
-    };
-    const frameRate: number = 15;
-    const maxKbps: number = 4000;
-    console.log("设置编码器参数", width, height, frameRate, maxKbps);
-    this.engine?.setVideoEncoderConfig({
-      width,
-      height,
-      frameRate,
-      maxKbps,
-    });
+    if (!width || !height) return;
+
+    this.cameraResolution = { width, height };
+
+    const { frameRate, bitrate } = this.options.videoStream;
+    const fps    = getFps(frameRate as FramerateId);
+    const maxKbps = getKbps(bitrate as BitrateId);
+
+    this.engine?.setVideoEncoderConfig({ width, height, frameRate: fps, maxKbps });
   }
   /** 调用 createEngine 创建一个本地 Engine 引擎对象 */
   async createEngine() {
