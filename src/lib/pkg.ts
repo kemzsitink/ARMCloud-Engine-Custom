@@ -5,19 +5,40 @@ import VolcRtc, { type VolcRtcOptions, type VolcRtcCallbacks } from "./module/vo
 import armcloudRtc from "./module/p2p/webRtc";
 import tcgRtc from "./module/tcg/tcgRtc";
 import { KeyboardMode } from "./types/index";
-import type { ArmcloudEngineParams, ArmcloudCallbacks } from "./types/index";
+import type { ArmcloudEngineParams, ArmcloudCallbacks, NetworkQualityLevel } from "./types/index";
 import { MediaType } from "./types/webrtcType";
 import { COMMON_CODE } from "./constant/index";
+
+/** Minimal interface shared by all RTC backends */
+interface RtcInstance {
+  start(isGroupControl?: boolean, pads?: string[]): void;
+  stop(): Promise<void> | void;
+  muted?(): void;
+  unmuted?(): void;
+  startPlay?(): void;
+  getRequestId?(): string | undefined;
+  sendInputString?(text: string, forwardOff?: boolean): void;
+  sendInputClipper?(text: string, forwardOff?: boolean): void;
+  joinGroupRoom?(pads: string[]): void;
+  kickItOutRoom?(pads: string[]): void;
+  toggleGroupControlSync?(flag: boolean): void;
+  setMicrophone?(val: boolean): void;
+  setCamera?(val: boolean): void;
+  setVideoDeviceId?(val: string): void;
+  setAudioDeviceId?(val: string): void;
+  startMediaStream?(mediaType: MediaType): Promise<void> | void;
+  stopMediaStream?(mediaType: MediaType): Promise<void> | void;
+}
 
 export class ArmcloudEngine {
   version: string = "CUSTOM";
 
-  rtcInstance: any = null;
+  rtcInstance: RtcInstance | null = null;
   callbacks: ArmcloudCallbacks | null = null;
   streamType: number | null = null;
 
-  private axiosSource: any = null;
-  private viewId: string = "";
+  private axiosSource: ReturnType<typeof axios.CancelToken.source> | null = null;
+  private readonly viewId: string = "";
 
   constructor(params: ArmcloudEngineParams) {
     this.viewId = params.viewId;
@@ -86,7 +107,7 @@ export class ArmcloudEngine {
           onRenderedFirstFrame:     this.callbacks?.onRenderedFirstFrame,
           onRunInformation:         this.callbacks?.onRunInformation,
           onNetworkQuality:         this.callbacks?.onNetworkQuality
-            ? (up, down) => this.callbacks!.onNetworkQuality!(up as any, down as any)
+            ? (up: NetworkQualityLevel, down: NetworkQualityLevel) => this.callbacks!.onNetworkQuality!(up, down)
             : undefined,
           onErrorMessage:           this.callbacks?.onErrorMessage,
           onAutoplayFailed:         this.callbacks?.onAutoplayFailed,
@@ -104,7 +125,7 @@ export class ArmcloudEngine {
           retryCount: params.retryCount ?? 2, retryTime: params.retryTime ?? 2000,
           keyboard: params.deviceInfo.keyboard ?? KeyboardMode.PAD,
         };
-        this.rtcInstance = new armcloudRtc(params.viewId, rtcOpts as any, this.callbacks as any);
+        this.rtcInstance = new armcloudRtc(params.viewId, rtcOpts as never, this.callbacks as never) as unknown as RtcInstance;
 
       } else if (data.streamType === 3) {
         const rtcOpts = {
@@ -114,7 +135,7 @@ export class ArmcloudEngine {
           masterIdPrefix: params.masterIdPrefix ?? "",
           keyboard: params.deviceInfo.keyboard ?? KeyboardMode.PAD,
         };
-        this.rtcInstance = new tcgRtc(params.viewId, rtcOpts as any, this.callbacks as any);
+        this.rtcInstance = new tcgRtc(params.viewId, rtcOpts as never, this.callbacks as never) as unknown as RtcInstance;
       }
 
       this.callbacks?.onInit?.({ code: COMMON_CODE.SUCCESS, msg: "ok", streamType: this.streamType ?? undefined, uuid });
@@ -141,9 +162,9 @@ export class ArmcloudEngine {
     return this.rtcInstance?.stop();
   }
 
-  muted()     { this.rtcInstance?.muted(); }
-  unmuted()   { this.rtcInstance?.unmuted(); }
-  startPlay() { this.rtcInstance?.startPlay(); }
+  muted()     { this.rtcInstance?.muted?.(); }
+  unmuted()   { this.rtcInstance?.unmuted?.(); }
+  startPlay() { this.rtcInstance?.startPlay?.(); }
 
   // ─── input ───────────────────────────────────────────────────────────────────
 
