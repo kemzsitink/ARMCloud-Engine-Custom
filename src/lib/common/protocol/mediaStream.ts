@@ -1,5 +1,5 @@
 import type { IRTCEngine } from "@volcengine/rtc";
-import { MediaType, SdkEventType, TouchType } from "../../../types/webrtcType";
+import { MediaType, SdkEventType, TouchType } from "../../types/webrtcType";
 
 export interface MediaStreamState {
   isCameraInject: boolean;

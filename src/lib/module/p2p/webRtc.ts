@@ -1,5 +1,5 @@
 import CryptoJS from "crypto-js";
-import Shake from "../../common/shake";
+import Shake from "../../common/utils/shake";
 import type { CustomDefinition } from "../../types/index";
 
 import { KeyboardMode, RotateDirection } from "../../types/index";
@@ -28,14 +28,15 @@ import {
   MediaOperationType,
   MediaStreamType,
 } from "../../types/webrtcType";
-import { generateTouchCoord } from "../../common/mixins";
-import { addInputElement } from "../../common/textInput";
-import ScreenshotOverlay from "../../common/screenshotOverlay";
+import { generateTouchCoord } from "../../common/utils/mixins";
+import { addInputElement } from "../../common/ui/textInput";
+import ScreenshotOverlay from "../../common/ui/screenshotOverlay";
 import type {
   TouchInfo,
   ArmcloudRtcOptions,
   ArmcloudCallbacks,
 } from "../../types/index";
+import { getMsgTemplate } from "../../common/protocol/messageTemplate";
 
 class WebRTC {
   // 初始外部H5传入DomId
@@ -282,17 +283,11 @@ class WebRTC {
     }
   }
 
-  private getMsgTemplate(touchType: TouchType, content: object) {
-    return JSON.stringify({
-      touchType,
-      content: JSON.stringify(content),
-    });
-  }
   /** 获取应用信息 */
   public getEquipmentInfo(type: "app" | "attr") {
     if (this.stopOperation) return;
     this.sendUserMessage(
-      this.getMsgTemplate(TouchType.EQUIPMENT_INFO, {
+      getMsgTemplate(TouchType.EQUIPMENT_INFO, {
         type,
       })
     );
@@ -306,7 +301,7 @@ class WebRTC {
   public appUnInstall(pkgNames: Array<string>) {
     if (this.stopOperation) return;
     this.sendUserMessage(
-      this.getMsgTemplate(TouchType.APP_UNINSTALL, pkgNames)
+      getMsgTemplate(TouchType.APP_UNINSTALL, pkgNames)
     );
   }
   /** 触发快捷键 */
@@ -685,7 +680,7 @@ class WebRTC {
     isOpen: boolean
   ) {
     await this.sendUserMessage(
-      this.getMsgTemplate(TouchType.EVENT_SDK, {
+      getMsgTemplate(TouchType.EVENT_SDK, {
         type,
         isOpen,
       }),
@@ -713,7 +708,7 @@ class WebRTC {
         : {
           type: options.type,
         };
-    const message = this.getMsgTemplate(TouchType.EVENT_SDK, contentObj);
+    const message = getMsgTemplate(TouchType.EVENT_SDK, contentObj);
     this.sendUserMessage(message, forwardOff);
   }
   setVideoEncoder(width: number, height: number) {}
@@ -1481,7 +1476,7 @@ class WebRTC {
               });
 
               this.sendUserMessage(
-                this.getMsgTemplate(TouchType.EVENT_SDK, {
+                getMsgTemplate(TouchType.EVENT_SDK, {
                   type: MessageKey.INJECTION_VIDEO_STATS,
                 }),
                 true
@@ -1544,7 +1539,7 @@ class WebRTC {
           },
         });
 
-        const message = this.getMsgTemplate(
+        const message = getMsgTemplate(
           TouchType.EVENT_SDK,
           type === MessageKey.START_INJECTION_VIDEO
             ? {
@@ -1571,7 +1566,7 @@ class WebRTC {
   /** 获取摄像头状态 */
   private getCameraState() {
     this.sendUserMessage(
-      this.getMsgTemplate(TouchType.EVENT_SDK, {
+      getMsgTemplate(TouchType.EVENT_SDK, {
         type: SdkEventType.GET_CAMERA_STATE,
       })
     );

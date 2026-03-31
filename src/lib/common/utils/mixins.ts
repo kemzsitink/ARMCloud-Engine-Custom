@@ -1,4 +1,4 @@
-import type { TouchInfo } from "../types/index";
+import type { TouchInfo } from "../../types/index";
 
 /** Generate randomised touch coordinate metadata for a single touch point. */
 export const generateTouchCoord = (): TouchInfo => {

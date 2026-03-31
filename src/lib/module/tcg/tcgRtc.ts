@@ -15,12 +15,7 @@ import {
     RotateDirection,
 } from "../../types/index";
 import { CloudGamingWebSDK, type AndroidInstance } from "./core/index";
-import { addInputElement } from "../../common/textInput";
 import CreateDataChannel, { EventType } from "./module/createDataChannel";
-import {
-    MetricsReporter,
-    ReportEventType,
-} from "../../common/metrics-reporter";
 import { isMobile, isTouchDevice, waitStyleApplied } from "../../utils/index";
 import axios from "axios";
 import {
@@ -37,21 +32,99 @@ import {
     type BitrateId,
     type FramerateId,
 } from "./config/streamProfiles";
-import type {
-    PromiseResolver,
-    PromiseMap,
-    RemoteInputState,
-} from "../../types/internal";
-import type {
-    ConnectFailResponse,
-    ConfigurationChangeResponse,
-    VideoStreamConfigResponse,
-    AndroidInstanceEventResponse,
-    SdkEventResponse,
-    InjectVideoOptions,
-    InjectResult,
-    StreamStatusResult,
-} from "../../types/rtc-responses";
+
+interface PromiseResolver<T = unknown> {
+    resolve: ((result: T) => void) | null;
+}
+
+interface PromiseMap {
+    streamStatus: PromiseResolver;
+    injectStatus: PromiseResolver;
+}
+
+interface RemoteInputState {
+    isOpen: boolean;
+    imeOptions: string;
+}
+
+interface ConnectFailResponse {
+    code: number;
+    msg?: string;
+}
+
+interface ConfigurationChangeResponse {
+    screen_config: {
+        orientation: "landscape" | "portrait";
+        deg: 0 | 90 | 180 | 270;
+        width: number;
+        height: number;
+    };
+}
+
+interface VideoStreamConfigResponse {
+    width: number;
+    height: number;
+}
+
+interface AndroidInstanceEventResponse {
+    type: string;
+    data?: { event_type?: string };
+}
+
+interface MediaStats {
+    audioStats: {
+        packet_lost: number;
+        packet_received: number;
+        bit_rate: number;
+        rtt: number;
+        jitter_buffer: number;
+        channels: number;
+        sample_rate: number;
+        concealed_samples: number;
+        concealment_events: number;
+        codec: string;
+    };
+    videoStats: {
+        width: number;
+        height: number;
+        packet_lost: number;
+        packet_received: number;
+        bit_rate: number;
+        fps: number;
+        edge_rtt: number;
+        rtt: number;
+        codec: string;
+        raw_rtt: number;
+    };
+}
+
+interface SdkEventResponse {
+    type: string;
+    data?: {
+        code?: number;
+        mediaType?: "video" | "audio";
+        audioStats?: MediaStats["audioStats"];
+        videoStats?: MediaStats["videoStats"];
+    };
+}
+
+interface InjectVideoOptions {
+    fileUrl?: string;
+    isLoop?: boolean;
+    fileName?: string;
+}
+
+interface InjectResult {
+    type: string;
+    status: string;
+    result: unknown;
+}
+
+interface StreamStatusResult {
+    path?: string;
+    status: string;
+    type: string;
+}
 
 class tcgRtc {
     // 引擎实例
@@ -65,8 +138,6 @@ class tcgRtc {
 
     // 远程用户 ID
     private remoteUserId: string = "";
-
-    private metricsReporter: MetricsReporter | null = null;
 
     // 取消请求
     private abortController: AbortController | null = null;
@@ -594,9 +665,7 @@ class tcgRtc {
     private setupInputElement() {
         const { disable, disableLocalIME } = this.options;
 
-        if (!this.inputElement && !disable && !disableLocalIME) {
-            addInputElement(this, true);
-        }
+        // addInputElement removed (module deleted)
     }
 
     /** 获取远端输入框状态 */
@@ -807,12 +876,6 @@ class tcgRtc {
                 unit: "Kbps",
             },
             onConnectFail: (response: ConnectFailResponse) => {
-                this.metricsReporter?.addParam(ReportEventType.FIRST_FRAME, {
-                    judgeTime: Date.now(),
-                    result: 0,
-                });
-                this.metricsReporter?.instant(ReportEventType.FIRST_FRAME);
-
                 const code = response.code;
 
                 // * | ------ | ----------------------------------------- |
@@ -895,30 +958,6 @@ class tcgRtc {
             // 初始化成功回调
             onInitSuccess: () => {
                 this.callbacks?.onConnectSuccess?.();
-
-                this.metricsReporter = new MetricsReporter({
-                    endpoint: `${this.options.baseUrl}/traffic-info/open/traffic/rtcMonitor`,
-                    commonParams: {
-                        padCode: this.remoteUserId,
-                        streamType: this.options.streamType,
-                        sdkTerminal: "h5",
-                    },
-                    onceOnlyKeys: [ReportEventType.FIRST_FRAME],
-                    useBeacon: false,
-                    enableLog: true,
-                });
-
-                this.metricsReporter.addParam(ReportEventType.FIRST_FRAME, {
-                    joinRoomTime: Date.now(),
-                });
-
-                this.metricsTimer = setTimeout(() => {
-                    this.metricsReporter?.addParam(ReportEventType.FIRST_FRAME, {
-                        judgeTime: Date.now(),
-                        result: 0,
-                    });
-                    this.metricsReporter?.instant(ReportEventType.FIRST_FRAME);
-                }, 5000);
 
                 isGroupControl
                     ? this.TCGSDK.access({
@@ -1010,11 +1049,6 @@ class tcgRtc {
                             });
                         break;
                     case "first_frame_received":
-                        this.metricsReporter?.addParam(ReportEventType.FIRST_FRAME, {
-                            judgeTime: Date.now(),
-                            result: 1,
-                        });
-                        this.metricsReporter?.instant(ReportEventType.FIRST_FRAME);
                         break;
                     case "idle":
                         // 触发自动回收回调

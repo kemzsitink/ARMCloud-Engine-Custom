@@ -1,7 +1,7 @@
 import type { IRTCEngine } from "@volcengine/rtc";
 import VERTC from "@volcengine/rtc";
-import { copyText } from "../../../utils/index";
-import { MediaType, MessageKey, TouchType } from "../../../types/webrtcType";
+import { copyText } from "../../utils/index";
+import { MediaType, MessageKey, TouchType } from "../../types/webrtcType";
 import { cameraInject, microphoneInject, stopMediaStream } from "./mediaStream";
 import type { MediaStreamState } from "./mediaStream";
 
